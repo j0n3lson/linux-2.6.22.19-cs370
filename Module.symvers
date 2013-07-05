@@ -85,6 +85,7 @@
 0x00000000	scsi_normalize_sense	vmlinux	EXPORT_SYMBOL
 0x00000000	klist_iter_exit	vmlinux	EXPORT_SYMBOL_GPL
 0x00000000	free_dma	vmlinux	EXPORT_SYMBOL
+0x00000000	print_me	vmlinux	EXPORT_SYMBOL
 0x00000000	device_unregister	vmlinux	EXPORT_SYMBOL_GPL
 0x00000000	xfrm_state_add	vmlinux	EXPORT_SYMBOL
 0x00000000	ata_port_offline	vmlinux	EXPORT_SYMBOL_GPL
