@@ -32,6 +32,10 @@
 #include <linux/sysdev.h>
 #include <linux/pci.h>
 #include <linux/msi.h>
+
+#ifdef	CONFIG_KDB
+#include <linux/kdb.h>
+#endif	/* CONFIG_KDB */
 #include <linux/htirq.h>
 #include <linux/freezer.h>
 #include <linux/kthread.h>
@@ -1244,6 +1248,10 @@ next:
 		return -ENOSPC;
 	if (vector == SYSCALL_VECTOR)
 		goto next;
+#ifdef	CONFIG_KDB
+	if (vector == KDBENTER_VECTOR)
+		goto next;
+#endif	/* CONFIG_KDB */
 	for (i = 0; i < NR_IRQ_VECTORS; i++)
 		if (irq_vector[i] == vector)
 			goto next;

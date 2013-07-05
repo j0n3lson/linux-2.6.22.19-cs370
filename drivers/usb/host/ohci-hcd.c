@@ -843,6 +843,53 @@ static int ohci_restart (struct ohci_hcd *ohci)
 
 /*-------------------------------------------------------------------------*/
 
+#ifdef	CONFIG_KDB_USB
+
+static void
+ohci_kdb_poll (void * __ohci, struct urb *urb)
+{
+	struct ohci_hcd *ohci;
+	struct ohci_regs * regs;
+
+	/*
+	 * NOTE - we use the ohci_hcd from the urb rather than the
+	 * __ohci parameter (which is NULL anyway). This ensures
+	 * that we will process the proper controller for the urb.
+	 */
+
+	if (!urb) /* can happen if no keyboard attached */
+		return;
+
+	ohci = (struct ohci_hcd *) hcd_to_ohci(bus_to_hcd(urb->dev->bus));
+	regs = ohci->regs;
+
+	/* if the urb is not currently in progress resubmit it */
+	if (urb->status != -EINPROGRESS) {
+
+		if (usb_submit_urb (urb, GFP_ATOMIC))
+			return;
+
+		/* make sure the HC registers are set correctly */
+		writel (OHCI_INTR_WDH, &regs->intrenable);
+		writel (OHCI_INTR_WDH, &regs->intrstatus);
+		writel (OHCI_INTR_MIE, &regs->intrenable);
+
+		// flush those pci writes
+		(void) readl (&ohci->regs->control);
+	}
+
+	if (ohci->hcca->done_head) {
+		dl_done_list_kdb (ohci, urb);
+		writel (OHCI_INTR_WDH, &regs->intrstatus);
+		// flush the pci write
+		(void) readl (&ohci->regs->control);
+	}
+}
+
+#endif /* CONFIG_KDB_USB */
+
+/*-------------------------------------------------------------------------*/
+
 #define DRIVER_INFO DRIVER_VERSION " " DRIVER_DESC
 
 MODULE_AUTHOR (DRIVER_AUTHOR);

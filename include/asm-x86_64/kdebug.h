@@ -23,6 +23,8 @@ enum die_val {
 	DIE_CALL,
 	DIE_NMI_IPI,
 	DIE_PAGE_FAULT,
+	DIE_KDEBUG_ENTER,
+	DIE_KDEBUG_LEAVE,
 };
 
 extern void printk_address(unsigned long address);

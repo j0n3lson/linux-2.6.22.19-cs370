@@ -35,6 +35,10 @@
 #include <acpi/acpi_bus.h>
 #endif
 
+#ifdef	CONFIG_KDB
+#include <linux/kdb.h>
+#endif	/* CONFIG_KDB */
+
 #include <asm/idle.h>
 #include <asm/io.h>
 #include <asm/smp.h>
@@ -697,6 +701,10 @@ next:
 			continue;
 		if (vector == IA32_SYSCALL_VECTOR)
 			goto next;
+#ifdef	CONFIG_KDB
+		if (vector == KDBENTER_VECTOR)
+			goto next;
+#endif	/* CONFIG_KDB */
 		for_each_cpu_mask(new_cpu, new_mask)
 			if (per_cpu(vector_irq, new_cpu)[vector] != -1)
 				goto next;
