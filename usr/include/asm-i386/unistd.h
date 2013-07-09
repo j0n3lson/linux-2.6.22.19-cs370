@@ -329,5 +329,7 @@
 #define __NR_signalfd		321
 #define __NR_timerfd		322
 #define __NR_eventfd		323
+#define __NR_mygetpid		324
+__SYSCALL(__NR_mygetpid, sys_mygetpid)
 
 #endif /* _ASM_I386_UNISTD_H_ */

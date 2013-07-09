@@ -943,6 +943,14 @@ asmlinkage long sys_getpid(void)
 }
 
 /*
+* JN p2-tutorial
+*/
+asmlinkage long sys_mygetpid(void)
+{
+	return current->tgid;
+}
+
+/*
  * Accessing ->real_parent is not SMP-safe, it could
  * change from under us. However, we can use a stale
  * value of ->real_parent under rcu_read_lock(), see

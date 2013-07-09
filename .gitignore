@@ -1,1 +1,6 @@
 *.qcow2
+*.o
+*.cmd
+vmlinux
+*.d
+*.a
