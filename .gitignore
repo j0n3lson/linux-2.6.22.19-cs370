@@ -1,4 +1,4 @@
-*.qcow2
+*.qcow*
 *.o
 *.cmd
 vmlinux
