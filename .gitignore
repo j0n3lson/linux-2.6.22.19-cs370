@@ -4,3 +4,4 @@
 vmlinux
 *.d
 *.a
+runvm

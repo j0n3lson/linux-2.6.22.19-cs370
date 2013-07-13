@@ -5007,6 +5007,7 @@ asmlinkage long sys_steal(long pid)
     return 0;
 }
 
+
  /***********************************************************
   *
   *   Program:    Quadtest.c
@@ -5024,36 +5025,40 @@ asmlinkage long sys_steal(long pid)
   ************************************************************/
 
 
-
 asmlinkage long sys_quad(long pid)
 {
-    // Precheck
+	 printk(KERN_ALERT "sys_quad ~ Proc Info ( PRE Quad ):\n");
+
+	 // Precheck
     if( pid <= 0 )
-        return -1;
+        return -2;
 
     // Find PID
     struct task_struct *task;
-
+		long result = -7;
     for_each_process(task)
     {
+//	printk(KERN_ALERT "processing pid %d\n", task->pid);
+
         if(task->pid == pid )
         {
-            printk("sys_quad ~ Proc Info ( PRE Quad ):\n");
-            printk("sys_quad ~ proc name: %s, PID: %d\n", task->comm, task->pid );
-            printk("sys_quad ~ proc time_slice: %d\n", task->time_slice);
+            printk(KERN_ALERT "sys_quad ~ Proc Info ( PRE Quad ):\n");
+            printk(KERN_ALERT "sys_quad ~ proc name: %s, PID: %d\n", task->comm, task->pid );
+            printk(KERN_ALERT "sys_quad ~ proc time_slice: %d\n", task->time_slice);
 
-            // Elevate priveleges
+            // modify time slice
+            result = task->time_slice;
+            result=result*4;
+            task->time_slice = result;
 
-            task->time_slice = (task->time_slice)*4;
-
-            printk("sys_quad ~ Proc Info ( POST Quad ):\n");
-            printk("sys_steal ~ proc name: %s, PID: %d\n", task->comm, task->pid );
-            printk("sys_quad ~ proc time_slice: %d\n", task->time_slice);
-   	    break;
+            printk(KERN_ALERT "sys_quad ~ Proc Info ( POST Quad ):\n");
+            printk(KERN_ALERT "sys_quad ~ proc name: %s, PID: %d\n", task->comm, task->pid );
+            printk(KERN_ALERT "sys_quad ~ proc time_slice: %d, result should equal %d\n", task->time_slice, result);
+			break;
         }
     }
 
-    return 0;
+    return result;
 }
 
 static const char stat_nam[] = "RSDTtZX";
