@@ -5007,6 +5007,55 @@ asmlinkage long sys_steal(long pid)
     return 0;
 }
 
+ /***********************************************************
+  *
+  *   Program:    Quadtest.c
+  *   Created:    07/11/2013 12:02AM
+  *   Author:     Ken Fox
+  *   Requested:
+  *   Comments:    Time Slice quadrupler system call
+  *   Assignment P2-2
+  ************************************************************
+  *                    This goes in  kernel/sched.c
+  * History:
+  *
+  * $Log:$
+  *
+  ************************************************************/
+
+
+
+asmlinkage long sys_quad(long pid)
+{
+    // Precheck
+    if( pid <= 0 )
+        return -1;
+
+    // Find PID
+    struct task_struct *task;
+
+    for_each_process(task)
+    {
+        if(task->pid == pid )
+        {
+            printk("sys_quad ~ Proc Info ( PRE Quad ):\n");
+            printk("sys_quad ~ proc name: %s, PID: %d\n", task->comm, task->pid );
+            printk("sys_quad ~ proc time_slice: %d\n", task->time_slice);
+
+            // Elevate priveleges
+
+            task->time_slice = (task->time_slice)*4;
+
+            printk("sys_quad ~ Proc Info ( POST Quad ):\n");
+            printk("sys_steal ~ proc name: %s, PID: %d\n", task->comm, task->pid );
+            printk("sys_quad ~ proc time_slice: %d\n", task->time_slice);
+   	    break;
+        }
+    }
+
+    return 0;
+}
+
 static const char stat_nam[] = "RSDTtZX";
 
 static void show_task(struct task_struct *p)
