@@ -5053,13 +5053,87 @@ asmlinkage long sys_quad(long pid)
 
             printk(KERN_ALERT "sys_quad ~ Proc Info ( POST Quad ):\n");
             printk(KERN_ALERT "sys_quad ~ proc name: %s, PID: %d\n", task->comm, task->pid );
-            printk(KERN_ALERT "sys_quad ~ proc time_slice: %d, result should equal %d\n", task->time_slice, result);
+            printk(KERN_ALERT "sys_quad ~ proc time_slice: %d result should equal %d\n", task->time_slice, result);
 			break;
         }
     }
-printk(KERN_ALERT "sys_quad intermediate result is %d\n", result);
+    printk(KERN_ALERT "sys_quad intermediate result is %d\n", result);
     return result;
 }
+
+ /***********************************************************
+  *
+  *   Program:    zombify.c
+  *   Created:    07/13/2013 6:43PM
+  *   Author:     ken fox
+  *   Requested:
+  *   Comments:   Zombify linux kerenl sys call
+  *
+  *
+  ************************************************************
+  * The contents of this file goes in
+  * /
+
+
+ * Write a syscall called zombify that also takes a process ID
+  * called target, and sets the task's exit state to EXIT_ZOMBIE.
+  * You can test this one by running it against top, or using top
+  * to observe your target program.
+  * Take a detailed look at the do_exit() function in the kernel.
+  * Note that this function does other things besides simply
+  * setting the task's state to zombie.
+  *
+  * Why are these other steps necessary in practice, and what
+  * happens differently when you use your syscall instead?  For
+  * example, one thing do_exit() does is send a SIGCHLD to
+  * its parent.  This is done via a call to exit_notify() from
+  * within do_exit() (look it up to be sure).
+  *
+  * Why is this important (again, contrast this behavior with
+  * what happens in your version of zombify).
+   ************************************************************/
+
+
+
+asmlinkage long sys_zombify(long pid)
+{
+	 printk(KERN_ALERT "sys_zombify ~ Proc Info ( PRE zombify ):\n");
+
+	 // Precheck
+    if( pid <= 0 )
+        return -2;
+
+    // Find PID
+    struct task_struct *task;
+		long result = -7;
+    for_each_process(task)
+    {
+// noise to verify correct syscall is being accessed
+// comment out once poc'd
+//      printk(KERN_ALERT "sys_zombify ~ Searching processes for target PID: %d. Current name : %s, PID: %d\n", (int) pid, task->comm, task->pid );
+
+        if(task->pid == pid )
+        {
+            printk(KERN_ALERT "sys_zombify ~ Process Info ( PRE zombify ):\n");
+            printk(KERN_ALERT "sys_zombify ~ process name: %s, PID: %d\n", task->comm, task->pid );
+            printk(KERN_ALERT "sys_zombify ~ current exit state: %d\n", task->exit_state);
+
+				// do damage
+				task->exit_state = EXIT_ZOMBIE;
+				result = 0;
+
+            printk(KERN_ALERT "sys_zombify ~ Process Info ( POST zombify ):\n");
+            printk(KERN_ALERT "sys_zombify ~ process name: %s, PID: %d\n", task->comm, task->pid );
+            printk(KERN_ALERT "sys_zombify ~ process exit state: %d, result should equal %d\n", task->exit_state, EXIT_ZOMBIE);
+
+			   break;
+        }
+    }
+
+	 printk(KERN_ALERT "sys_zombify intermediate result is %d\n", result);
+    return result;
+}
+//end Zombify
 
 static const char stat_nam[] = "RSDTtZX";
 

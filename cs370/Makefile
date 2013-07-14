@@ -62,6 +62,10 @@ $(KDEV_VM_BOOT): build_kernel
 run_vm: $(KDEV_VM_BOOT)
 	kvm -curses -kernel $(KDEV_VM_BOOT) -append 'root=/dev/hda1 ro' -drive file=$(KDEV_VM) --redir tcp:$(KDEV_VM_REDIR_PORT)::22
    
+# run vm without building
+run:
+	kvm -curses -kernel $(KDEV_VM_BOOT) -append 'root=/dev/hda1 ro' -drive file=$(KDEV_VM) --redir tcp:$(KDEV_VM_REDIR_PORT)::22
+
 # Build just the wrappers
 build_wrappers:
 	@cd $(WRAPPER_DIR); make build_all;

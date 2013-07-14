@@ -639,6 +639,8 @@ __SYSCALL(__NR_swipe, sys_swipe)
 #define __NR_quad		288
 __SYSCALL(__NR_quad, sys_quad)
 
+#define __NR_zombify		289
+__SYSCALL(__NR_zombify, sys_zombify)
 
 
 
