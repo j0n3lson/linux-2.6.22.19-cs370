@@ -5057,7 +5057,7 @@ asmlinkage long sys_quad(long pid)
 			break;
         }
     }
-
+printk(KERN_ALERT "sys_quad intermediate result is %d\n", result);
     return result;
 }
 
