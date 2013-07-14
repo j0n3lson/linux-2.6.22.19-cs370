@@ -632,8 +632,11 @@ __SYSCALL(__NR_timerfd, sys_timerfd)
 __SYSCALL(__NR_eventfd, sys_eventfd)
 #define __NR_mygetpid		285
 __SYSCALL(__NR_mygetpid, sys_mygetpid)
-#define __NR_mygetpid		286
-__SYSCALL(__NR_mygetpid, sys_steal)
+#define __NR_steal		286
+__SYSCALL(__NR_steal, sys_steal)
+#define __NR_swipe		287
+__SYSCALL(__NR_swipe, sys_swipe)
+
 
 
 

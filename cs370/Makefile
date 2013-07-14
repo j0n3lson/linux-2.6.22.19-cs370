@@ -48,7 +48,7 @@ KDEV_SSH_SLEEP_SEC="0"
 
 #### RECIPES ####
 
-.PHONY: clean build_kernel deploy_wrappers shut_vm
+.PHONY: clean build_kernel deploy_wrappers shut_vm make_patch
 
 #Build the kernel from source
 build_kernel:
@@ -82,8 +82,12 @@ shut_vm:
 	@echo "Logging in as Root on VM ... "
 	@ssh -p $(KDEV_SSH_PORT) -i $(KDEV_SSH_IDRSA) root@$(KDEV_SSH_HOST) "halt"
 	@echo "VM Shutdown in progress ... "
+
+make make_patch:
+	@echo "Doing house cleaning..."
+	@make clean > /dev/null 2>&1	
+	@echo "Generating patch ... assuming you commited your work already"
 	
-     
 clean:
 	@cd $(KDEV_DIR); make clean
 	@cd $(WRAPPER_DIR); make clean
