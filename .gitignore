@@ -5,3 +5,4 @@ vmlinux
 *.d
 *.a
 runvm
+*autoconf.h

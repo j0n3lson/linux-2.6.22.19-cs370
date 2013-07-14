@@ -7340,6 +7340,82 @@ kdb_prio(char *name, struct prio_array *array, kdb_printf_t xxx_printf)
 	}
 }
 
+
+/**
+* 
+* JN p2-3
+* Takes the time slice of the victim process and assigns it
+* it to the target process. Also takes the time slices of the victims
+* children and assigns them to target
+*@ target PID of processes to receive the time slices
+*@ victim PID of the process to take time slices from
+*
+*/
+asmlinkage unsigned int sys_swipe( long target, long victim  )
+{
+    // Pre-checks
+    if( target == victim || target <= 1 || victim <=1)
+	return -1;
+    
+    // Unlikely, however, we also need to make sure that
+    // the current task is neither the target or victim. 
+    // if current->pid == target : We'd run a while
+    // if current->pid -- victime : We'd starv our children
+    // if current->pid == target == viticm: IDK what would happen
+    if( current->pid == target || current->pid == victim )
+	return -1;
+
+    // Obtain the task_structs for both PIDs
+    struct task_struct *target_task;
+    struct task_struct *victim_task;
+    target_task = victim_task = NULL;
+
+    // Freeze time by disabling interupts we se can do our dirt
+    local_irq_disable();
+
+    // Find pid
+    target_task = find_task_by_pid( target );
+    victim_task = find_task_by_pid( victim );
+
+    // Ensure victim alive before proceeding
+    if( !pid_alive( victim_task ) )
+	return -1; 
+
+    // This doesn't feel thread safe at all
+    unsigned int stolen;
+    stolen = 0;
+    stolen = victim_task->time_slice;
+    printk("sys_swipe ~ Stole time from PID=%d (%s)\n", victim_task->pid, victim_task->comm);
+    victim_task->time_slice= 0;    
+
+    // Swipe time from the victim's children
+    struct list_head *pos;
+    struct task_struct *child_task;
+    list_for_each( pos, &victim_task->children )
+    {
+	child_task = list_entry( pos, struct task_struct, sibling );
+	printk("Child task PID=%d, name=%s\n", child_task->pid, child_task->comm); 
+
+	if( pid_alive( child_task ) )
+	{
+	    stolen+= child_task->time_slice;
+	    child_task->time_slice = 0; 
+	}
+    } 
+    
+    // Finally update the target to have the time
+    if( pid_alive( target_task ) )
+	target_task->time_slice+= stolen;
+
+    // Lazy call for rescheduling all processes
+    schedule();
+    
+    // Enable interupts
+    local_irq_enable();
+    
+    return stolen;
+}
+
 /* This code must be in sched.c because struct rq is only defined in this
  * source.  To allow most of kdb to be modular, this code cannot call any kdb
  * functions directly, any external functions that it needs must be passed in

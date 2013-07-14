@@ -325,4 +325,5 @@ ENTRY(sys_call_table)
 	.long sys_eventfd
 	.long sys_mygetpid		
 	.long sys_steal			/* 325 */
+	.unsigned int sys_swipe
 	.long sys_quad
