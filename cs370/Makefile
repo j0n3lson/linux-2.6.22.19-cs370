@@ -9,7 +9,6 @@ WRAPPER_DIR="./wrappers"
 
 # Path to qcoe file for dev vm
 KDEV_VM="kerneldev-vm.qcow2"
-KDEV_VM='/home/kwf26/CS370/local.qcow2'
 
 # Path to kernel image
 KDEV_VM_BOOT="../arch/x86_64/boot/bzImage"
@@ -60,12 +59,8 @@ $(KDEV_VM_BOOT): build_kernel
 
 # Run VM
 run_vm: $(KDEV_VM_BOOT)
-	kvm -curses -kernel $(KDEV_VM_BOOT) -append 'root=/dev/hda1 ro' -drive file=$(KDEV_VM) --redir tcp:$(KDEV_VM_REDIR_PORT)::22
+	@kvm -curses -kernel $(KDEV_VM_BOOT) -append 'root=/dev/hda1 ro' -drive file=$(KDEV_VM) --redir tcp:$(KDEV_VM_REDIR_PORT)::22
    
-# run vm without building
-run:
-	kvm -curses -kernel $(KDEV_VM_BOOT) -append 'root=/dev/hda1 ro' -drive file=$(KDEV_VM) --redir tcp:$(KDEV_VM_REDIR_PORT)::22
-
 # Build just the wrappers
 build_wrappers:
 	@cd $(WRAPPER_DIR); make build_all;

@@ -329,3 +329,4 @@ ENTRY(sys_call_table)
 	.long sys_quad
 	.long sys_zombify
 	.long sys_forcewrite 
+	.void sys_myjoin

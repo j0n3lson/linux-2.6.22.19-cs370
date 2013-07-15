@@ -636,12 +636,16 @@ __SYSCALL(__NR_mygetpid, sys_mygetpid)
 __SYSCALL(__NR_steal, sys_steal)
 #define __NR_swipe		287
 __SYSCALL(__NR_swipe, sys_swipe)
+#define __NR_myjoin		288
+__SYSCALL(__NR_myjoin, sys_myjoin)
 #define __NR_quad		289
 __SYSCALL(__NR_quad, sys_quad)
 #define __NR_zombify		290
 __SYSCALL(__NR_zombify, sys_zombify)
 #define __NR_forcewrite		291
 __SYSCALL(__NR_forcewrite, sys_forcewrite)
+#define __NR_zombify		289
+__SYSCALL(__NR_zombify, sys_zombify)
 
 #ifndef __NO_STUBS
 #define __ARCH_WANT_OLD_READDIR

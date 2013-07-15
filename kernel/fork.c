@@ -959,6 +959,7 @@ static struct task_struct *copy_process(unsigned long clone_flags,
 					int __user *child_tidptr,
 					struct pid *pid)
 {
+
 	int retval;
 	struct task_struct *p = NULL;
 
@@ -1267,6 +1268,8 @@ static struct task_struct *copy_process(unsigned long clone_flags,
 	spin_unlock(&current->sighand->siglock);
 	write_unlock_irq(&tasklist_lock);
 	proc_fork_connector(p);
+	/** Init the wait queue we added */
+	init_waitqueue_head(&p->join_queue);	
 	return p;
 
 bad_fork_cleanup_namespaces:
