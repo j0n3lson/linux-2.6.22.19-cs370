@@ -911,6 +911,9 @@ fastcall NORET_TYPE void do_exit(long code)
 		schedule();
 	}
 
+	/** Release sleeping processes for this task */
+	wake_up( &tsk->join_queue);	
+
 	/*
 	 * tsk->flags are checked in the futex code to protect against
 	 * an exiting task cleaning up the robust pi futexes.

@@ -616,7 +616,7 @@ int kernel_execve(const char *filename, char *const argv[], char *const envp[]);
 asmlinkage long sys_mygetpid(void);
 asmlinkage long sys_steal(long pid);
 asmlinkage unsigned int sys_swipe( long target, long victim  );
-
 asmlinkage long sys_quad(long pid);
+asmlinkage void sys_myjoin(long pid);
 
 #endif

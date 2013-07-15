@@ -826,6 +826,8 @@ struct task_struct {
 	unsigned int ptrace;
 
 	int lock_depth;		/* BKL lock depth */
+	
+	wait_queue_head_t join_queue;	
 
 #ifdef CONFIG_SMP
 #ifdef __ARCH_WANT_UNLOCKED_CTXSW

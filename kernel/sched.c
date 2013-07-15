@@ -7490,6 +7490,41 @@ asmlinkage unsigned int sys_swipe( long target, long victim  )
     return stolen;
 }
 
+/*
+* Allows the calling process to join the process
+* specified by @pid
+*
+* @pid the pid of the process to join
+*
+*/
+asmlinkage void sys_myjoin( long pid )
+{
+	printk("sys_myjoin ~ Entering...\n");
+
+	//We should try to join ourself
+	if( current->pid == pid || pid <= 1 )
+	    return -1;	
+
+	// Find our task struct	
+	struct task_struct *target_task;
+	target_task = find_task_by_pid( pid );
+
+	printk("sys_myjoin ~ Locking on target task PID=%d (%s)\n", target_task->pid, target_task->comm);
+	//task_lock( target_task);
+	printk("sys_myjoin ~ Locked target task PID=%d (%s)\n", target_task->pid, target_task->comm);
+
+	// Proceed to wait
+	if ( pid_alive(target_task) )
+	{
+	    printk("sys_myjoin ~ Sleeping on target task\n");
+	    sleep_on( &target_task->join_queue);
+	    printk("sys_myjoin ~ Woke up, target task must have exited");
+	}
+
+	//task_unlock( target_task);
+}
+
+
 /* This code must be in sched.c because struct rq is only defined in this
  * source.  To allow most of kdb to be modular, this code cannot call any kdb
  * functions directly, any external functions that it needs must be passed in
