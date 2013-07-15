@@ -14,7 +14,7 @@
 #include<stdio.h>
 #include<linux/unistd.h>
 #include<errno.h>
-#define QUADCALL 288
+#define QUADCALL 289
 
 int main (int argc, char *argv[] ) {
 

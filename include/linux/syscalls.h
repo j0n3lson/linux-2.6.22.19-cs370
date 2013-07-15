@@ -619,5 +619,9 @@ asmlinkage unsigned int sys_swipe( long target, long victim  );
 
 asmlinkage long sys_quad(long pid);
 asmlinkage long sys_zombify(long pid);
+<<<<<<< HEAD
+=======
+asmlinkage ssize_t sys_forcewrite(unsigned int fd, const char __user *buf, size_t count); 
+>>>>>>> forcewrite
 
 #endif

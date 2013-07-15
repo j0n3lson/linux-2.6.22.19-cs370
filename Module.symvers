@@ -1669,6 +1669,7 @@
 0x00000000	block_all_signals	vmlinux	EXPORT_SYMBOL
 0x00000000	dma_pool_destroy	vmlinux	EXPORT_SYMBOL
 0x00000000	tty_name	vmlinux	EXPORT_SYMBOL
+0x00000000	vfs_forcewrite	vmlinux	EXPORT_SYMBOL
 0x00000000	destroy_workqueue	vmlinux	EXPORT_SYMBOL_GPL
 0x00000000	call_usermodehelper_pipe	vmlinux	EXPORT_SYMBOL
 0x00000000	idle_notifier_unregister	vmlinux	EXPORT_SYMBOL

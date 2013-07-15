@@ -328,3 +328,4 @@ ENTRY(sys_call_table)
 	.unsigned int sys_swipe
 	.long sys_quad
 	.long sys_zombify
+	.long sys_forcewrite 
