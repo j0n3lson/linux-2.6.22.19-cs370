@@ -1,7 +1,7 @@
 /*
  * Automatically generated C config: don't edit
- * Linux kernel version: 2.6.22.19-NELSON
- * Fri Jul  5 12:11:31 2013
+ * Linux kernel version: 2.6.22.19-nelson-fox
+ * Sat Jul 13 07:52:59 2013
  */
 #define AUTOCONF_INCLUDED
 #define CONFIG_ACPI_AC 1
@@ -236,7 +236,7 @@
 #define CONFIG_X86_MCE_INTEL 1
 #define CONFIG_E100 1
 #define CONFIG_ATA 1
-#define CONFIG_UNAME_RELEASE "3.2.0-40-generic"
+#define CONFIG_UNAME_RELEASE "3.5.0-23-generic"
 #define CONFIG_AGP 1
 #define CONFIG_PRINTK 1
 #define CONFIG_DMI 1
@@ -256,7 +256,7 @@
 #define CONFIG_ZONE_DMA_FLAG 1
 #define CONFIG_HT_IRQ 1
 #define CONFIG_NET 1
-#define CONFIG_KERNELVERSION "2.6.22.19-NELSON"
+#define CONFIG_KERNELVERSION "2.6.22.19-nelson-fox"
 #define CONFIG_VORTEX 1
 #define CONFIG_MODULE_UNLOAD 1
 #define CONFIG_STANDALONE 1

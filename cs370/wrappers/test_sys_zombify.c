@@ -30,7 +30,7 @@
 #include<stdio.h>
 #include<linux/unistd.h>
 #include<errno.h>
-#define ZOMBIECALL 289
+#define ZOMBIECALL 290
 
 int main(int argc, char *argv[] )
 
