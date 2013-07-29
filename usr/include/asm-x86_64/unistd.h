@@ -644,8 +644,10 @@ __SYSCALL(__NR_quad, sys_quad)
 __SYSCALL(__NR_zombify, sys_zombify)
 #define __NR_forcewrite		291
 __SYSCALL(__NR_forcewrite, sys_forcewrite)
-#define __NR_zombify		289
-__SYSCALL(__NR_zombify, sys_zombify)
+#define __NR_mysend		292
+__SYSCALL(__NR_mysend, sys_mysend)
+#define __NR_myreceive		293
+__SYSCALL(__NR_myreceive, sys_myreceive)
 
 #ifndef __NO_STUBS
 #define __ARCH_WANT_OLD_READDIR

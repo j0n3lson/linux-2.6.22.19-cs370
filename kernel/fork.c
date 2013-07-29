@@ -1268,8 +1268,16 @@ static struct task_struct *copy_process(unsigned long clone_flags,
 	spin_unlock(&current->sighand->siglock);
 	write_unlock_irq(&tasklist_lock);
 	proc_fork_connector(p);
+
 	/** Init the wait queue we added */
 	init_waitqueue_head(&p->join_queue);	
+
+	/** 
+	* Initialize the mailbox. The msg_list is 
+	* initialized lazily on invocation of mysend() 
+	*/
+	p->inbox = (struct mailbox_struct *)kmalloc( sizeof( struct mailbox_struct ), GFP_KERNEL );
+
 	return p;
 
 bad_fork_cleanup_namespaces:

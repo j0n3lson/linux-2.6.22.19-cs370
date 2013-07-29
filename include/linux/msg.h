@@ -11,6 +11,7 @@
 #define MSG_NOERROR     010000  /* no error if message is too big */
 #define MSG_EXCEPT      020000  /* recv any msg except of specified type.*/
 
+
 /* Obsolete, used only for backwards compatibility and libc5 compiles */
 struct msqid_ds {
 	struct ipc_perm msg_perm;
@@ -63,6 +64,22 @@ struct msginfo {
 
 #ifdef __KERNEL__
 #include <linux/list.h>
+#include <linux/completion.h>
+
+/* One mail time */
+struct mail_struct{
+    pid_t from_pid;
+    int msg_len;
+    char *msg;
+    struct completion read;
+    struct list_head list;
+};
+
+/* One inbox for process. This should be initialized on task creation */
+struct mailbox_struct{
+    spinlock_t lock;		    /** Lock for this struct */
+    struct mail_struct *msg_list;   /** Links list of queued messages */
+};
 
 /* one msg_msg structure for each message */
 struct msg_msg {

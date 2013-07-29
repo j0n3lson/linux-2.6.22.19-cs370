@@ -86,6 +86,10 @@ struct sched_param {
 
 #include <asm/processor.h>
 
+#ifndef _LINUX_MSG_H
+#include <linux/msg.h>
+#endif
+
 struct exec_domain;
 struct futex_pi_state;
 struct bio;
@@ -828,6 +832,9 @@ struct task_struct {
 	int lock_depth;		/* BKL lock depth */
 	
 	wait_queue_head_t join_queue;	
+	
+	/** Mailbox IPC struct */
+	struct mailbox_struct *inbox;	
 
 #ifdef CONFIG_SMP
 #ifdef __ARCH_WANT_UNLOCKED_CTXSW

@@ -40,6 +40,7 @@
 #include <asm/current.h>
 #include <asm/uaccess.h>
 #include "util.h"
+#include <linux/spinlock.h>
 
 /*
  * one msg_receiver structure for each sleeping receiver:
@@ -918,6 +919,183 @@ asmlinkage long sys_msgrcv(int msqid, struct msgbuf __user *msgp, size_t msgsz,
 		err = -EFAULT;
 out:
 	return err;
+}
+
+/** 
+* Initialize a new message, once initialized this message
+* can only be used for a message of size len. You must initialize
+* another message if you want a message of a different size
+*/
+static void init_mail( struct mail_struct *m, int len )
+{
+    m = (struct mail_struct *)kmalloc( sizeof( struct mail_struct ), GFP_KERNEL );  
+    
+    if( !m )	    // Return NULL if we failed allocation
+	return;
+
+    m->msg_len = len;
+    m->msg = (char *)kmalloc( len*sizeof( char ), GFP_KERNEL );
+
+    if( m->msg == NULL )
+    {
+	printk(KERN_ALERT, "Unable to allocate buffer for message ... ");	
+	kfree(m);	
+	m = NULL; 
+	return;
+    }
+
+    init_completion( &(m->read) );
+    INIT_LIST_HEAD( &(m->list) );
+}
+
+asmlinkage void sys_mysend(pid_t pid, int n , char *buf )
+{
+    /** Syscall 292 */
+    
+    // Setup new mail struct, do this early so we can bail if kmallo c() fails. Plus kmalloc()
+    // may sleep so we can't go _uninterruptible_ prior to calling kmalloc(). Con:
+    // If the target task terminates prior to use sending it a message, we did all this
+    // work for nothing…
+
+    struct mail_struct *new_msg;
+    struct task_struct *to_task;
+    unsigned long flags;
+
+    // Initialize a new message
+    init_mail( new_msg, n );
+    if( new_msg == NULL )	  
+    {
+	printk(KERN_ALERT, "Unable to allocate memory for new message or message buffer ... " );
+	return;
+    }
+
+    new_msg->from_pid = current->pid;
+
+    // Initialize the new message
+    new_msg->from_pid = current->pid;
+    new_msg->msg_len = n;
+   
+    // Copy the userland data into our message 
+    copy_from_user( new_msg->msg, buf, n ); /* TODO: Check return val */
+
+    // Now that the message is initialized, let's find the receiver task
+    
+    // Safe read on tasklist
+
+    read_lock(&tasklist_lock);
+    to_task = find_task_by_pid( pid );
+    read_unlock(&tasklist_lock);
+    
+    // Stop the task to ensure it doesn't exit before
+    // the message is delivered
+    set_task_state( to_task, TASK_UNINTERRUPTIBLE);
+    schedule();
+
+    // Now the task should be blocked, add our message
+    spin_lock_irqsave( &(to_task->inbox->lock), flags);
+
+
+    // Lazy initialization of messages is done to avoid
+    // prematurally allocating memory on the kernel stack
+    // for a task. However, when init_mail() is called, 
+    // it implicitly the message list. We check that
+    // the message list is uninitialized, if so our message
+    // is the first.
+   
+    if( to_task->inbox == NULL )	/** Ours is the first message */
+	to_task->inbox = new_msg;	
+    else				/** Ours is another message, add it to the list */
+	list_add_tail( &(new_msg->list), &(to_task->inbox->msg_list->list) );
+
+    spin_unlock_irqrestore( &(to_task->inbox->lock), flags);
+
+    // Restore the state of the target process
+    set_task_state( to_task, TASK_RUNNING); /* TODO: Save state and restore state */
+    schedule();
+
+    wait_for_completion( &(new_msg->read) ); /* TODO: Syntax */
+    
+    //Delete mail
+    printk( KERN_ALERT, "Process (%d) ~ Message was delivered to process (%d)\n", current->pid, to_task->pid);
+
+    // Lock the mailbox as this changes the pointers in the list_head
+    spin_lock_irqsave( &(to_task->inbox->lock), flags );
+    list_del( &(new_msg->list) ); 
+    spin_unlock_irqrestore( &(to_task->inbox->lock), flags);
+
+    kfree( new_msg->msg );
+    kfree( new_msg );
+}
+
+asmlinkage int sys_myreceive( pid_t pid, int n , char *buf)
+{
+    /** Syscall 293 */
+
+    unsigned long flags;
+    spin_lock_irqsave( &(current->inbox->lock), flags );
+
+    if( list_empty( &(current->inbox->msg_list->list) ) ) /* List empty, return */
+    {	
+	spin_unlock_irqrestore( &(current->inbox->lock), flags );
+	return 0;
+    }
+
+    /* Retrieve the first message from the queue */
+    struct mail_struct *email;
+    int nr_copied, nr_failed_copy;
+    
+    // TODO: Check return values
+    if ( pid == -1 ) // Receive from anyone
+    {
+	// Retrieve message, copy to user land
+	email = list_entry( &(current->inbox->msg_list->list), struct mail_struct, list );	
+	nr_failed_copy = copy_to_user( buf, email->msg, email->msg_len);
+
+	if( nr_failed_copy > 0 )
+	    nr_copied = -1;
+	else
+	    nr_copied = n - nr_failed_copy;	
+
+	// Note: Applies to sting messages only, if message is binary, don't print
+	printk(KERN_ALERT "PID (%d) ~ Got message from pid (%d), msg=%s\n", current->pid, email->from_pid, email->msg);
+
+	// Unlock for all
+	spin_unlock_irqrestore( &(current->inbox->lock), flags);	
+	
+	// Inform sender we have read their message
+	complete( &(email->read) );    
+
+	return nr_copied;   
+
+    } else {	// Iterate the list to find a message from the given pid
+	
+	list_for_each_entry( email, &(current->inbox->msg_list->list), list)
+	{
+	    if( email->from_pid == pid)
+	    {
+		nr_failed_copy = copy_to_user( buf, email->msg, email->msg_len);
+		
+		if( nr_failed_copy > 0 )
+		    nr_copied = -1;
+		else
+		    nr_copied = n - nr_failed_copy;	
+		
+		// Note: Applies to sting messages only, if message is binary, don't print
+		printk(KERN_ALERT "PID (%d) ~ Got message from pid (%d), msg=%s\n", current->pid, email->from_pid, email->msg);
+	    
+		// Unlock mailbox for other senders
+		spin_unlock_irqrestore( &(current->inbox->lock), flags);	
+
+		// Inform sender we have read their message
+		complete( &(email->read) );    
+
+		return nr_copied;
+	    }
+	}
+
+	spin_unlock_irqrestore( &(current->inbox->lock), flags);
+	return -1;
+    }
 }
 
 #ifdef CONFIG_PROC_FS

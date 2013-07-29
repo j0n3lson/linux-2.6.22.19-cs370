@@ -620,5 +620,7 @@ asmlinkage long sys_quad(long pid);
 asmlinkage long sys_zombify(long pid);
 asmlinkage ssize_t sys_forcewrite(unsigned int fd, const char __user *buf, size_t count); 
 asmlinkage void sys_myjoin(long pid);
+asmlinkage void mysend(pid_t pid, int n , char *buf );
+asmlinkage int myreceive( pid_t pid, int n , char *buf);
 
 #endif
