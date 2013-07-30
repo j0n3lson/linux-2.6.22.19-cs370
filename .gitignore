@@ -8,3 +8,4 @@ runvm
 include/linux/autoconf.h
 *.0
 .version
+*.swp

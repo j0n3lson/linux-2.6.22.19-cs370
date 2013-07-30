@@ -948,10 +948,57 @@ static void init_mail( struct mail_struct *m, int len )
     INIT_LIST_HEAD( &(m->list) );
 }
 
+/* 
+* Search for the first message from a given pid. Return NULL if
+* no such message is found
+*/
+static struct mail_struct* find_mail_by_pid( pid_t pid, struct mailbox_struct *m)
+{
+    struct list_head *cursor;
+    struct mail_struct *mail;
+
+    list_for_each( cursor, &(m->msg_list->list) )
+    {
+	mail = list_entry(cursor , struct mail_struct, list); 
+	if( mail->from_pid == pid )
+	    return mail;
+    }
+
+    return NULL;
+}
+
+/* 
+* Lock the mailbox before searching
+*/
+static struct mail_struct* safe_find_mail_by_pid( pid_t pid, struct mailbox_struct *m )
+{
+    unsigned long flags;
+    struct mail_struct *mail;
+
+    spin_lock_irqsave( &(m->lock), flags );
+    mail = find_mail_by_pid( pid, m ); 
+    spin_unlock_irqrestore( &(m->lock), flags );
+
+    return mail;    // Get it!? Hehehehehhe
+}
+
+
 asmlinkage void sys_mysend(pid_t pid, int n , char *buf )
 {
     /** Syscall 292 */
-    
+
+    /*
+    * Because a sender must wait for the recipient to ack the message
+    * (i.e. by calling wait_for_completion( &(new_msg->read) ), a
+    * deadlock occurs when the calling process trys to send to a
+    * recipient that is pending ack from the calling process. Below
+    * we check for this case and immediately return -1. The calling
+    * process should check this value and check for a message from
+    * the calling process ( i.e. myrecieve( callling_pid, ... )
+    */
+    if(  safe_find_mail_by_pid( pid, current->inbox ) != NULL )
+	return -1;
+
     // Setup new mail struct, do this early so we can bail if kmallo c() fails. Plus kmalloc()
     // may sleep so we can't go _uninterruptible_ prior to calling kmalloc(). Con:
     // If the target task terminates prior to use sending it a message, we did all this
@@ -969,14 +1016,13 @@ asmlinkage void sys_mysend(pid_t pid, int n , char *buf )
 	return;
     }
 
-    new_msg->from_pid = current->pid;
-
     // Initialize the new message
     new_msg->from_pid = current->pid;
     new_msg->msg_len = n;
    
     // Copy the userland data into our message 
     copy_from_user( new_msg->msg, buf, n ); /* TODO: Check return val */
+
 
     // Now that the message is initialized, let's find the receiver task
     
@@ -1041,61 +1087,60 @@ asmlinkage int sys_myreceive( pid_t pid, int n , char *buf)
     }
 
     /* Retrieve the first message from the queue */
-    struct mail_struct *email;
+    struct mail_struct *mail;
     int nr_copied, nr_failed_copy;
     
     // TODO: Check return values
     if ( pid == -1 ) // Receive from anyone
     {
-	// Retrieve message, copy to user land
-	email = list_entry( &(current->inbox->msg_list->list), struct mail_struct, list );	
-	nr_failed_copy = copy_to_user( buf, email->msg, email->msg_len);
+	// Retrieve first message in list, copy to user land
+	mail = list_entry( &(current->inbox->msg_list->list), struct mail_struct, list );	
+	nr_failed_copy = copy_to_user( buf, mail->msg, mail->msg_len);
 
 	if( nr_failed_copy > 0 )
 	    nr_copied = -1;
 	else
 	    nr_copied = n - nr_failed_copy;	
 
-	// Note: Applies to sting messages only, if message is binary, don't print
-	printk(KERN_ALERT "PID (%d) ~ Got message from pid (%d), msg=%s\n", current->pid, email->from_pid, email->msg);
-
 	// Unlock for all
 	spin_unlock_irqrestore( &(current->inbox->lock), flags);	
 	
+	// Note: Applies to sting messages only, if message is binary, don't print
+	printk(KERN_ALERT "PID (%d) ~ Got message from pid (%d), msg=%s\n", current->pid, mail->from_pid, mail->msg);
+
 	// Inform sender we have read their message
-	complete( &(email->read) );    
+	complete( &(mail->read) );    
 
 	return nr_copied;   
 
     } else {	// Iterate the list to find a message from the given pid
+
+	mail = find_mail_by_pid( pid, current->inbox );
+
+	if( mail == NULL ) /* No message from that PID */
+	    return 0;
 	
-	list_for_each_entry( email, &(current->inbox->msg_list->list), list)
-	{
-	    if( email->from_pid == pid)
-	    {
-		nr_failed_copy = copy_to_user( buf, email->msg, email->msg_len);
-		
-		if( nr_failed_copy > 0 )
-		    nr_copied = -1;
-		else
-		    nr_copied = n - nr_failed_copy;	
-		
-		// Note: Applies to sting messages only, if message is binary, don't print
-		printk(KERN_ALERT "PID (%d) ~ Got message from pid (%d), msg=%s\n", current->pid, email->from_pid, email->msg);
-	    
-		// Unlock mailbox for other senders
-		spin_unlock_irqrestore( &(current->inbox->lock), flags);	
+	nr_failed_copy = copy_to_user( buf, mail->msg, mail->msg_len);
+	if( nr_failed_copy > 0 )
+	    nr_copied = -1;
+	else
+	    nr_copied = n;
+	
+	// Unlock mailbox for other senders
+	spin_unlock_irqrestore( &(current->inbox->lock), flags);	
 
-		// Inform sender we have read their message
-		complete( &(email->read) );    
+	// Note: Applies to sting messages only, if message is binary, don't print
+	printk(KERN_ALERT "PID (%d) ~ Got message from pid (%d), msg=%s\n", current->pid, mail->from_pid, mail->msg);
+    
 
-		return nr_copied;
-	    }
-	}
+	// Inform sender we have read their message
+	complete( &(mail->read) );    
 
-	spin_unlock_irqrestore( &(current->inbox->lock), flags);
-	return -1;
+	return nr_copied;
     }
+
+    spin_unlock_irqrestore( &(current->inbox->lock), flags);
+    return -1;
 }
 
 #ifdef CONFIG_PROC_FS
