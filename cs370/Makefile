@@ -16,7 +16,7 @@ KDEV_VM_BOOT="../arch/x86_64/boot/bzImage"
 # Port on host system to direct SSH to
 KDEV_VM_REDIR_PORT="2222"
 
-# Directory on vm host that holds the bins
+# Directory on guest vm that holds the compiled wrapper-test programs
 KDEV_VM_BIN_DIR="/home/user/"
 
 # Path to kernel source tree
@@ -60,7 +60,7 @@ $(KDEV_VM_BOOT): build_kernel
 # Run VM
 run_vm: $(KDEV_VM_BOOT)
 	@kvm -curses -kernel $(KDEV_VM_BOOT) -append 'root=/dev/hda1 ro' -drive file=$(KDEV_VM) --redir tcp:$(KDEV_VM_REDIR_PORT)::22
-   
+
 # Build just the wrappers
 build_wrappers:
 	@cd $(WRAPPER_DIR); make build_all;
@@ -85,9 +85,9 @@ shut_vm:
 
 make make_patch:
 	@echo "Doing house cleaning..."
-	@make clean > /dev/null 2>&1	
+	@make clean > /dev/null 2>&1
 	@echo "Generating patch ... assuming you commited your work already"
-	
+
 clean:
 	@cd $(KDEV_DIR); make clean
 	@cd $(WRAPPER_DIR); make clean
