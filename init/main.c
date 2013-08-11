@@ -6,7 +6,7 @@
  *  GK 2/5/95  -  Changed to support mounting root fs via NFS
  *  Added initrd & change_root: Werner Almesberger & Hans Lermen, Feb '96
  *  Moan early if gcc is old, avoiding bogus kernels - Paul Gortmaker, May '96
- *  Simplified starting of init:  Michael A. Griffith <grif@acm.org> 
+ *  Simplified starting of init:  Michael A. Griffith <grif@acm.org>
  */
 
 #include <linux/types.h>
@@ -151,6 +151,16 @@ static unsigned int max_cpus = NR_CPUS;
 unsigned int reset_devices;
 EXPORT_SYMBOL(reset_devices);
 
+/* CS370P4
+ * control flag for scheduler selection
+ * to be set from command line 
+ * this is the name of the flag variable not the setter/getter function
+ * next check visibility
+ */
+
+unsigned int fscheduler;
+EXPORT_SYMBOL(fscheduler);
+
 /*
  * Setup routine for controlling SMP activation
  *
@@ -184,6 +194,21 @@ static int __init set_reset_devices(char *str)
 }
 
 __setup("reset_devices", set_reset_devices);
+
+
+/* CS370P4
+ * control flag setter for scheduler selection
+ * to be set from command line
+ * 
+ * we want to be able to see this in sched.c
+ */
+static int __init set_fscheduler(char *str)
+{
+	fscheduler = 1;
+	return 1;
+}
+
+__setup("fscheduler", set_fscheduler);
 
 static char * argv_init[MAX_INIT_ARGS+2] = { "init", NULL, };
 char * envp_init[MAX_INIT_ENVS+2] = { "HOME=/", "TERM=linux", NULL, };
@@ -468,7 +493,7 @@ static void noinline __init_refok rest_init(void)
 
 	/* Call into cpu_idle with preempt disabled */
 	cpu_idle();
-} 
+}
 
 /* Check for early params. */
 static int __init do_early_param(char *param, char *val)
@@ -626,6 +651,12 @@ asmlinkage void __init start_kernel(void)
 	if (late_time_init)
 		late_time_init();
 	calibrate_delay();
+	 /* CS370P4
+	  * if the fschedule command line argument was present we should be running
+	  * the 'fair' scheduler -- so output a message in a safe place for now
+	  */
+ 	if (fscheduler) printk(KERN_ALERT "Running Fair Scheduler -- fscheduler, should OOPS in a minute! (or less) \n");
+
 	pidmap_init();
 	pgtable_cache_init();
 	prio_tree_init();
