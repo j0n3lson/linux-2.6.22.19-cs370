@@ -1,0 +1,4 @@
+#!/bin/bash
+# wraps the cheesy make file with the excrutiatingly long path 
+
+make -C ~/CS370/linux-2.6.22.19-cs370 M=`pwd` ${1}

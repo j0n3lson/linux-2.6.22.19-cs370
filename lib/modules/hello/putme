@@ -1,0 +1,3 @@
+#!/bin/bash
+# puts evverything in the current directory onto the runnign image
+scp -P2222 * user@localhost:~/modules/hello
