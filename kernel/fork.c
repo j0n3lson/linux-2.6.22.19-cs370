@@ -57,6 +57,9 @@
 #include <asm/cacheflush.h>
 #include <asm/tlbflush.h>
 
+#include <linux/uid.h>
+extern struct uid_acct *uacct;
+
 /*
  * Protected counters by write_lock_irq(&tasklist_lock)
  */
@@ -68,6 +71,10 @@ int max_threads;		/* tunable limit on nr_threads */
 DEFINE_PER_CPU(unsigned long, process_counts) = 0;
 
 __cacheline_aligned DEFINE_RWLOCK(tasklist_lock);  /* outer */
+
+/**CS370-P4-START*/
+//extern struct uid_acct *uacct;
+/**CS370-P4-END*/
 
 int nr_processes(void)
 {
@@ -1375,11 +1382,28 @@ long do_fork(unsigned long clone_flags,
 	}
 
 	p = copy_process(clone_flags, stack_start, regs, stack_size, parent_tidptr, child_tidptr, pid);
+
+
 	/*
 	 * Do this prior waking up the new thread - the thread pointer
 	 * might get invalid after that point, if the thread exits quickly.
 	 */
 	if (!IS_ERR(p)) {
+
+		/*CS370-P4-START*/
+	    /*
+		unsigned long flags;
+		spin_lock_irqsave( &uacct->lock, flags);
+		if( &uacct->uid_tab[ p->uid ] != -1 )	// First time we've seen this UID
+		{
+		    uacct->nr_users++;
+		    uacct->uid_tab[ p->uid ] = 1;
+		}		
+		spin_unlock_irqrestore( &uacct->lock, flags);
+	*/
+		
+		/*CS370-P4-END*/
+
 		struct completion vfork;
 
 		if (clone_flags & CLONE_VFORK) {
