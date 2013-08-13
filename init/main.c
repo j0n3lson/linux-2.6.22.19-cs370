@@ -70,6 +70,53 @@
 #include <linux/kdb.h>
 #endif	/* CONFIG_KDB */
 
+#include <linux/uid.h>
+
+/*CS370-P4-START*/
+struct uid_acct *uacct;
+EXPORT_SYMBOL(uacct);
+
+static inline void INIT_UID_ACCT( struct uid_acct *uacct )
+{
+    // Allocate space for struct
+    uacct = (struct uid_acct *)kmalloc( sizeof(struct uid_acct), GFP_KERNEL);
+
+    printk(KERN_ALERT "##DBG INIT_UID_ACCT ~ After uacct alloc..%pK\n",uacct);
+
+    if( !uacct )
+    {
+	uacct = NULL;
+	printk(KERN_ALERT, "INIT_UID_ACCT ~ Can't allocate space for uid_acct struct...\n");
+	return;
+    }
+
+    // Allocate space for array
+    uacct->uid_tab = (uid_t *)kmalloc( MAX_TAB_SZ * sizeof( uid_t ), GFP_KERNEL);
+    if( !uacct->uid_tab )   // Allocation failure 
+    {
+	kfree( uacct );
+	uacct = NULL;
+	printk(KERN_ALERT, "INIT_UID_ACCT ~ Can't allocate space for uid_tab, size was %d\n", MAX_TAB_SZ * sizeof(uid_t) );
+	return;
+    }
+    
+    //Initialize array
+    int i;
+    for( i = 0; i < MAX_TAB_SZ; i++ )
+    {
+	uacct->uid_tab[i] = -1;
+    }
+
+    // Initialize remaining members
+    spin_lock_init( &(uacct->lock) );
+
+    printk(KERN_ALERT "##DBG INIT_UID_ACCT ~ spinlock @ %pK\n",&uacct->lock);
+    uacct->nr_users = 0;
+
+}
+
+/*CS370-P4-END*/
+
 /*
  * This is one of the first .c files built. Error out early if we have compiler
  * trouble.
@@ -583,7 +630,8 @@ asmlinkage void __init start_kernel(void)
 	 * time - but meanwhile we still have a functioning scheduler.
 	 */
 	sched_init();
-	/*
+
+    	/*
 	 * Disable preemption - early bootup scheduling is extremely
 	 * fragile until we cpu_idle() for the first time.
 	 */
@@ -779,6 +827,12 @@ static void __init do_initcalls(void)
  */
 static void __init do_basic_setup(void)
 {
+	/**CS370-P4-START*/ 
+	struct uid_acct *uacct;
+	INIT_UID_ACCT( uacct );
+	//EXPORT_SYMBOL(uacct);
+	/**CS370-P4-END*/
+
 	/* drivers will send hotplug events */
 	init_workqueues();
 	usermodehelper_init();
@@ -871,7 +925,7 @@ static int __init kernel_init(void * unused)
 
 	do_pre_smp_initcalls();
 
-	smp_init();
+    	smp_init();
 	sched_init_smp();
 
 	cpuset_init_smp();
@@ -897,5 +951,6 @@ static int __init kernel_init(void * unused)
 	 * initmem segments and start the user-mode stuff..
 	 */
 	init_post();
-	return 0;
+	
+    	return 0;
 }

@@ -936,6 +936,7 @@
 0x00000000	sock_no_getname	vmlinux	EXPORT_SYMBOL
 0x00000000	vfs_link	vmlinux	EXPORT_SYMBOL
 0x00000000	get_futex_key	vmlinux	EXPORT_SYMBOL_GPL
+0x00000000	uacct	vmlinux	EXPORT_SYMBOL
 0x00000000	ide_use_fast_pio	vmlinux	EXPORT_SYMBOL_GPL
 0x00000000	phy_driver_unregister	vmlinux	EXPORT_SYMBOL
 0x00000000	isa_dma_bridge_buggy	vmlinux	EXPORT_SYMBOL

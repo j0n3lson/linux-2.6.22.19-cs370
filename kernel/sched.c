@@ -56,6 +56,7 @@
 
 #include <asm/tlb.h>
 #include <asm/unistd.h>
+#include <linux/uid.h>
 
 /*
  * Scheduler clock - returns current time in nanosec units.
@@ -212,9 +213,34 @@ static inline void sg_inc_cpu_power(struct sched_group *sg, u32 val)
  * priority thread gets MIN_TIMESLICE worth of execution time.
  */
 
+
 static inline unsigned int task_timeslice(struct task_struct *p)
 {
-	return static_prio_timeslice(p->static_prio);
+    unsigned long flags;
+    int time_slice;
+
+    extern struct uid_acct *uacct;
+
+    printk(KERN_ALERT "In task_timeslice()...before lock. lock @ %pK\n", &uacct->lock);
+    spin_lock_irqsave( &(uacct->lock), flags );
+    printk(KERN_ALERT "##DBG task_timeslice()...after lock...\n");
+    
+    
+    if( &uacct->nr_users == 0 )
+    {
+	time_slice = DEF_TIMESLICE;
+	printk(KERN_ALERT "##DBG task_timeslice()...after lock...\n");
+    } 
+    else
+    {
+	time_slice = ( 1 / uacct->nr_users) / atomic_read( &current->user->processes );
+    } 
+    spin_unlock_irqrestore( &uacct->lock, flags);
+    printk(KERN_ALERT "##DBG task_timeslice()...after lock...\n");
+	
+    return time_slice;
+
+    //	return static_prio_timeslice(p->static_prio);
 }
 
 /*

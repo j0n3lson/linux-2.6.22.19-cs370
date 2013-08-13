@@ -1,5 +1,0 @@
-*.qcow2
-*.o
-*.cmd
-*vmlinux*
-*.mod.c*
