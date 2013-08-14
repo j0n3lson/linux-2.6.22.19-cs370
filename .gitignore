@@ -1,0 +1,14 @@
+*.qcow2
+*.o
+*.cmd
+*vmlinux*
+*.mod.c*
+*.swp
+*.ko
+System.map
+*tmp*
+*.a
+compile.h
+Module.symvers
+?version
+
