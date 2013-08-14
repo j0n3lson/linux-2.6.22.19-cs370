@@ -1,3 +1,12 @@
+/* inlcude/linux/uid.h
+ * struct definition for the Fair Scheduler 
+ * CS370 Project 4
+ * Authors: Joe Nelson
+ *          Ken Fox
+ * 
+ * Comments - table size is arbitrary
+ */
+
 #ifndef __UID_H__
 #define __UID_H__
 

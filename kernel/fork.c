@@ -73,6 +73,8 @@ DEFINE_PER_CPU(unsigned long, process_counts) = 0;
 __cacheline_aligned DEFINE_RWLOCK(tasklist_lock);  /* outer */
 
 /**CS370-P4-START*/
+// This is not used in the functioning implementation
+// it's here because it was part of the debugging process
 //extern struct uid_acct *uacct;
 /**CS370-P4-END*/
 
@@ -1391,7 +1393,12 @@ long do_fork(unsigned long clone_flags,
 	if (!IS_ERR(p)) {
 
 		/*CS370-P4-START*/
-	    /*
+		/* KF 08142015 this code is not used in the functioning scheduler routine.
+		 * it was placed here originally; however it appears to be redundant
+		* we should strip it out OR experiment with it using the appropriate
+		* NULL checking routines.
+		*/
+		/*
 		unsigned long flags;
 		spin_lock_irqsave( &uacct->lock, flags);
 		if( &uacct->uid_tab[ p->uid ] != -1 )	// First time we've seen this UID
@@ -1400,7 +1407,7 @@ long do_fork(unsigned long clone_flags,
 		    uacct->uid_tab[ p->uid ] = 1;
 		}		
 		spin_unlock_irqrestore( &uacct->lock, flags);
-	*/
+		*/
 		
 		/*CS370-P4-END*/
 

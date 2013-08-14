@@ -219,25 +219,32 @@ static inline unsigned int task_timeslice(struct task_struct *p)
     unsigned long flags;
     int time_slice;
 
-    extern struct uid_acct *uacct;
+	/*CS370-P4-START */
+	/* there are two checks for NULL, both are necessary -- KF */
+	/* there's no requirement to lock the uid_acct when the number of
+	 * users is 0 or the pointer is NULL, so we confine the locking to the 
+	 * alternate case; hoever, we still need to check that the lock itself
+	 * is not null (did not do that first time and it OOPS'd). We don;t
+	 * need	 to check the unlock case.
+	 */
 
-    printk(KERN_ALERT "In task_timeslice()...before lock. lock @ %pK\n", &uacct->lock);
-    spin_lock_irqsave( &(uacct->lock), flags );
-    printk(KERN_ALERT "##DBG task_timeslice()...after lock...\n");
+    extern struct uid_acct *uacct;
     
-    
-    if( &uacct->nr_users == 0 )
+    if( uacct == NULL || &uacct->nr_users == 0 )
     {
 	time_slice = DEF_TIMESLICE;
-	printk(KERN_ALERT "##DBG task_timeslice()...after lock...\n");
     } 
     else
     {
+	//    printk(KERN_ALERT "In task_timeslice()...before lock. lock @ %pK\n", &uacct->lock);
+    if( &uacct->lock != NULL)    spin_lock_irqsave( &(uacct->lock), flags );
+	//    printk(KERN_ALERT "##DBG task_timeslice()...after lock...\n");
+    
 	time_slice = ( 1 / uacct->nr_users) / atomic_read( &current->user->processes );
+	spin_unlock_irqrestore( &uacct->lock, flags);
     } 
-    spin_unlock_irqrestore( &uacct->lock, flags);
-    printk(KERN_ALERT "##DBG task_timeslice()...after lock...\n");
 	
+	/*CS370-P4-START */
     return time_slice;
 
     //	return static_prio_timeslice(p->static_prio);
