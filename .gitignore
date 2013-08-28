@@ -8,7 +8,14 @@
 System.map
 *tmp*
 *.a
-compile.h
-Module.symvers
+*compile.h
+/Module.symvers
 ?version
+.missing-syscalls.d
+arch/x86_64/kernel/asm-offsets.s
+cs370/errlog
+include/asm-x86_64/asm-offsets.h
+kdb/gen-kdb_cmds.c
+usr/.initramfs_data.cpio.gz.d
+
 
