@@ -1,0 +1,5 @@
+
+KERNELSRCDIR=~/CS370/linux-2.6.22.19-cs370/
+CURRDIR=`pwd`
+make -C ${KERNELSRCDIR} M=${CURRDIR} ${1}
+
